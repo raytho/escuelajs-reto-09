@@ -1,20 +1,32 @@
-const express = require('express');
+const express = require("express");
+const path = require("path");
+const bodyParser = require("body-parser");
+//const productsRouter = require("./routes/views/products");
+const productsApiRouter = require("./routes/index");
+
+// app
 const app = express();
 
-const { config } = require('./config');
-const platziStore = require('./routes')
+// middlewares
+app.use(bodyParser.json());
 
-app.get('/', (req, res) => {
-  let userInfo = req.header("user-agent");
-  res.send(`UserInfo: ${userInfo}`);
+// static files
+app.use("/static", express.static(path.join(__dirname, "public")));
+
+// view engine setup
+app.set("views", path.join(__dirname, "views"));
+app.set("view engine", "pug");
+
+// routes
+//app.use("/products", productsRouter);
+app.use("/api/products", productsApiRouter);
+
+// redirect
+app.get("/", function (req, res) {
+  res.redirect("/products");
 });
 
-platziStore(app);
-
-app.listen(config.port, err => {
-  if (err) {
-    console.error("Error: ", err);
-    return;
-  }
-  console.log(`Listening http://localhost:${config.port}`);
+// server
+const server = app.listen(8001, function () {
+  console.log(`Listening http://localhost:${server.address().port}`);
 });

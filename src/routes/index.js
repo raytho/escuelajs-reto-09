@@ -1,31 +1,95 @@
-const express = require('express');
-const path = require('path');
-const ProductService = require('../services');
-const receipt = '../assets/receipt.pdf'
+const express = require("express");
+const router = express.Router();
+const ProductsService = require("../services/index");
 
-const platziStore = (app) => {
-  const router = express.Router();
-  app.use('/api/', router);
+const productService = new ProductsService();
 
-  const productService = new ProductService();
+router.get("/", async function (req, res, next) {
+  const { tags } = req.query;
 
-  router.get('/', (req, res) => {
-    res.send(`API v2`);
-  });
+  console.log("req", req.query);
 
-  router.get('/receipts', (req, res, next) => {
-    let file = path.join(__dirname, receipt);
-    res.sendFile(file);
-  });
+  try {
+    const products = await productService.getProducts({ tags });
 
-  router.get('/products', async (req, res, next) => {
-    const storeProducts = await productService.getProducts()
-    res.status(200).json(storeProducts);
-  });
+    res.status(200).json({
+      data: products,
+      message: "products listed",
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
-  router.get('*', (req, res) => {
-    res.status(404).send('Error 404');
-  });
-}
+router.get("/:productId", async function (req, res, next) {
+  const { productId } = req.params;
 
-module.exports = platziStore;
+  console.log("req", req.params);
+
+  try {
+    const product = await productService.getProduct({ productId });
+
+    res.status(200).json({
+      data: product,
+      message: "product retrieved",
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post("/", async function (req, res, next) {
+  const { body: product } = req;
+
+  console.log("req", req.body);
+
+  try {
+    const createdProduct = await productService.createProduct({ product });
+
+    res.status(201).json({
+      data: createdProduct,
+      message: "product created",
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.put("/:productId", async function (req, res, next) {
+  const { productId } = req.params;
+  const { body: product } = req;
+
+  console.log("req", req.params, req.body);
+
+  try {
+    const updatedProduct = await productService.updateProduct({
+      productId,
+      product,
+    });
+    res.status(200).json({
+      data: updatedProduct,
+      message: "product updated",
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete("/:productId", async function (req, res, next) {
+  const { productId } = req.params;
+
+  console.log("req", req.params);
+
+  try {
+    const deletedProduct = await productService.deleteProduct({ productId });
+
+    res.status(200).json({
+      data: deletedProduct,
+      message: "product deleted",
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+module.exports = router;
